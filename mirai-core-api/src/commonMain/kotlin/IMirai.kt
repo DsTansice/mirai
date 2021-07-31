@@ -311,6 +311,14 @@ public interface IMirai : LowLevelApiAccessor {
     public suspend fun broadcastEvent(event: Event) {
         _EventBroadcast.implementation.broadcastImpl(event)
     }
+
+    /**
+     * 请使用 [Voice.toAudio]
+     * @since 2.7
+     */
+    @Suppress("DEPRECATION")
+    @MiraiInternalApi
+    public fun voiceToAudio(voice: Voice): Audio
 }
 
 /**

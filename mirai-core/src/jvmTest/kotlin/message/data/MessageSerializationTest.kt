@@ -12,13 +12,12 @@ package net.mamoe.mirai.internal.message.data
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer
 import net.mamoe.mirai.Mirai
 import net.mamoe.mirai.internal.message.FileMessageImpl
 import net.mamoe.mirai.internal.message.MarketFaceImpl
+import net.mamoe.mirai.internal.message.OnlineAudioImpl
 import net.mamoe.mirai.internal.message.UnsupportedMessageImpl
 import net.mamoe.mirai.internal.network.protocol.data.proto.ImMsgBody
 import net.mamoe.mirai.internal.utils._miraiContentToString
@@ -220,12 +219,12 @@ internal class MessageSerializationTest {
 
     @Serializable
     data class V(
-        val msg: Voice
+        val msg: Audio
     )
 
     @Test
-    fun `test Voice serialization`() {
-        val v = V(Voice("4517", byteArrayOf(14), 50, 3, "https://github.com"))
+    fun `test Audio serialization`() {
+        val v = V(OnlineAudioImpl("4517", byteArrayOf(14), 50, AudioCodec.AMR, "https://github.com", 1))
         println(v.serialize(V.serializer()))
         assertEquals(
             v.serialize(V.serializer()),
@@ -237,7 +236,7 @@ internal class MessageSerializationTest {
             v,
             v.serialize(V.serializer()).deserialize(V.serializer())
         )
-        v.msg.pttInternalInstance = ImMsgBody.Ptt(
+        v.msg.cast<OnlineAudioImpl>().originalPtt = ImMsgBody.Ptt(
             srcUin = 1234567890,
             fileMd5 = byteArrayOf(14, 81, 37, 14),
             boolValid = true,
@@ -254,5 +253,46 @@ internal class MessageSerializationTest {
             v,
             v.serialize(V.serializer()).deserialize(V.serializer())
         )
+    }
+
+    @Serializable
+    data class AudioTestStandard(
+        val online: OnlineAudio,   // expected contextual
+        val offline: OfflineAudio, // expected contextual
+        val onlineAsRec: Audio,    // expected polymorphic
+        val offlineAsRec: Audio,   // expected polymorphic
+    )
+
+    @Test
+    fun `test Audio`() {
+        val origin = AudioTestStandard(
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2),
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK),
+
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2),
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK),
+        )
+
+        assertEquals(
+            "OnlineAudio",
+            format.encodeToJsonElement(origin).jsonObject["onlineAsRec"]!!.jsonObject["type"]!!.jsonPrimitive.content
+        )
+        assertEquals(
+            "OfflineAudio",
+            format.encodeToJsonElement(origin).jsonObject["offlineAsRec"]!!.jsonObject["type"]!!.jsonPrimitive.content
+        )
+
+        assertEquals(
+            "OnlineAudio",
+            format.encodeToJsonElement(origin).jsonObject["onlineAsRec"]!!.jsonObject["type"]!!.jsonPrimitive.content
+        )
+        assertEquals(
+            "OfflineAudio",
+            format.encodeToJsonElement(origin).jsonObject["offlineAsRec"]!!.jsonObject["type"]!!.jsonPrimitive.content
+        )
+
+        val result = origin.serialize().deserialize<AudioTestStandard>()
+
+        assertEquals(origin, result)
     }
 }

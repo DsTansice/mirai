@@ -7,10 +7,12 @@
  * https://github.com/mamoe/mirai/blob/dev/LICENSE
  */
 
+@file:JvmBlockingBridge
+
 package net.mamoe.mirai.contact
 
 import net.mamoe.kjbb.JvmBlockingBridge
-import net.mamoe.mirai.message.data.Voice
+import net.mamoe.mirai.message.data.OfflineAudio
 import net.mamoe.mirai.utils.ExternalResource
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsVoice
 import net.mamoe.mirai.utils.NotStableForInheritance
@@ -22,7 +24,7 @@ import net.mamoe.mirai.utils.OverFileSizeMaxException
  * @since 2.7
  */
 @NotStableForInheritance
-public interface VoiceSupported : Contact {
+public interface AudioSupported : Contact {
     /**
      * 上传一个语音消息以备发送.
      *
@@ -33,7 +35,5 @@ public interface VoiceSupported : Contact {
      * @see ExternalResource.uploadAsVoice
      * @throws OverFileSizeMaxException 当语音文件过大而被服务器拒绝上传时. (最大大小约为 1 MB)
      */
-    @JvmBlockingBridge
-    public suspend fun uploadVoice(resource: ExternalResource): Voice
-
+    public suspend fun uploadAudio(resource: ExternalResource): OfflineAudio
 }

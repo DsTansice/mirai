@@ -124,6 +124,14 @@ internal open class MiraiImpl : IMirai, LowLevelApiAccessor {
                 UnsupportedMessageImpl::class,
                 UnsupportedMessageImpl.serializer()
             )
+            MessageSerializers.registerSerializer(
+                OnlineAudioImpl::class,
+                OnlineAudioImpl.serializer()
+            )
+            MessageSerializers.registerSerializer(
+                OfflineAudioImplWithPtt::class,
+                OfflineAudioImplWithPtt.Serializer.cast()
+            )
         }
     }
 
@@ -321,6 +329,20 @@ internal open class MiraiImpl : IMirai, LowLevelApiAccessor {
             invitorId = event.invitorId,
             groupId = event.groupId,
             accept = accept
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    @MiraiInternalApi
+    override fun voiceToAudio(voice: Voice): Audio {
+        if (voice is Audio) return voice
+        return OnlineAudioImpl(
+            voice.fileName,
+            voice.md5,
+            voice.fileSize,
+            AudioCodec.fromIdOrNull(voice._codec) ?: AudioCodec.SILK,
+            voice.url ?: "",
+            0
         )
     }
 
@@ -964,15 +986,5 @@ internal open class MiraiImpl : IMirai, LowLevelApiAccessor {
                 error("Message is too large and cannot download")
             }
         }
-    }
-
-    override fun serializePttElem(ptt: Any?): String {
-        if (ptt !is ImMsgBody.Ptt) return ""
-        return ptt.toByteArray(ImMsgBody.Ptt.serializer()).toUHexString()
-    }
-
-    override fun deserializePttElem(ptt: String): Any? {
-        if (ptt.isBlank()) return null
-        return ptt.hexToBytes().loadAs(ImMsgBody.Ptt.serializer())
     }
 }
