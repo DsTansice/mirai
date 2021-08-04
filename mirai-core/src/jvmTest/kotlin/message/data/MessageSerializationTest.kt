@@ -222,64 +222,41 @@ internal class MessageSerializationTest {
         val msg: Audio
     )
 
-    @Test
-    fun `test Audio serialization`() {
-        val v = V(OnlineAudioImpl("4517", byteArrayOf(14), 50, AudioCodec.AMR, "https://github.com", 1))
-        println(v.serialize(V.serializer()))
-        assertEquals(
-            v.serialize(V.serializer()),
-            v.serialize(V.serializer())
-                .deserialize(V.serializer())
-                .serialize(V.serializer())
-        )
-        assertEquals(
-            v,
-            v.serialize(V.serializer()).deserialize(V.serializer())
-        )
-        v.msg.cast<OnlineAudioImpl>().originalPtt = ImMsgBody.Ptt(
-            srcUin = 1234567890,
-            fileMd5 = byteArrayOf(14, 81, 37, 14),
-            boolValid = true,
-            format = 90,
-        )
-        println(v.serialize(V.serializer()))
-        assertEquals(
-            v.serialize(V.serializer()),
-            v.serialize(V.serializer())
-                .deserialize(V.serializer())
-                .serialize(V.serializer())
-        )
-        assertEquals(
-            v,
-            v.serialize(V.serializer()).deserialize(V.serializer())
-        )
-    }
-
     @Serializable
     data class AudioTestStandard(
-        val online: OnlineAudio,   // expected contextual
-        val offline: OfflineAudio, // expected contextual
-        val onlineAsRec: Audio,    // expected polymorphic
-        val offlineAsRec: Audio,   // expected polymorphic
+        val online: OnlineAudio,
+        val offline: OfflineAudio,
+        val onlineAsRec: Audio,
+        val offlineAsRec: Audio,
     )
 
     @Test
-    fun `test Audio`() {
+    fun `test Audio standard`() {
         val origin = AudioTestStandard(
-            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2),
-            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK),
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, null),
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK, null),
 
-            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2),
-            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK),
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, null),
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK, null),
         )
+
+        assertEquals(
+            AudioCodec.SILK.id,
+            format.encodeToJsonElement(origin).jsonObject["offline"]!!.jsonObject["codec"]!!.jsonPrimitive.content.toInt()
+        ) // use custom serializer
+
+        assertEquals(
+            AudioCodec.SILK.id,
+            format.encodeToJsonElement(origin).jsonObject["online"]!!.jsonObject["codec"]!!.jsonPrimitive.content.toInt()
+        ) // use custom serializer
 
         assertEquals(
             "OnlineAudio",
-            format.encodeToJsonElement(origin).jsonObject["onlineAsRec"]!!.jsonObject["type"]!!.jsonPrimitive.content
+            format.encodeToJsonElement(origin).jsonObject["online"]!!.jsonObject["type"]!!.jsonPrimitive.content
         )
         assertEquals(
             "OfflineAudio",
-            format.encodeToJsonElement(origin).jsonObject["offlineAsRec"]!!.jsonObject["type"]!!.jsonPrimitive.content
+            format.encodeToJsonElement(origin).jsonObject["offline"]!!.jsonObject["type"]!!.jsonPrimitive.content
         )
 
         assertEquals(
@@ -292,6 +269,49 @@ internal class MessageSerializationTest {
         )
 
         val result = origin.serialize().deserialize<AudioTestStandard>()
+
+        assertEquals(origin.online::class, result.online::class)
+        assertEquals(origin.offline::class, result.offline::class)
+        assertEquals(origin.onlineAsRec::class, result.onlineAsRec::class)
+        assertEquals(origin.offlineAsRec::class, result.offlineAsRec::class)
+
+        assertEquals(origin.online, result.online)
+        assertEquals(origin.offline, result.offline)
+        assertEquals(origin.onlineAsRec, result.onlineAsRec)
+        assertEquals(origin.offlineAsRec, result.offlineAsRec)
+
+        assertEquals(origin, result)
+    }
+
+    @Serializable
+    data class AudioTestWithPtt(
+        val online: OnlineAudio,
+        val offline: OfflineAudio,
+        val onlineAsRec: Audio,
+        val offlineAsRec: Audio,
+    )
+
+    @Test
+    fun `test Audio with ptt`() {
+        val origin = AudioTestWithPtt(
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, ImMsgBody.Ptt(1)),
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK, byteArrayOf(1, 2)),
+
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, ImMsgBody.Ptt(1)),
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK, byteArrayOf(1, 2)),
+        )
+
+        val result = origin.serialize().deserialize<AudioTestWithPtt>()
+
+        assertEquals(origin.online::class, result.online::class)
+        assertEquals(origin.offline::class, result.offline::class)
+        assertEquals(origin.onlineAsRec::class, result.onlineAsRec::class)
+        assertEquals(origin.offlineAsRec::class, result.offlineAsRec::class)
+
+        assertEquals(origin.online, result.online)
+        assertEquals(origin.offline, result.offline)
+        assertEquals(origin.onlineAsRec, result.onlineAsRec)
+        assertEquals(origin.offlineAsRec, result.offlineAsRec)
 
         assertEquals(origin, result)
     }

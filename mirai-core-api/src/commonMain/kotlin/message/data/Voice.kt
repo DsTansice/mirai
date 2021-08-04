@@ -16,7 +16,6 @@ package net.mamoe.mirai.message.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import net.mamoe.mirai.Mirai
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.MiraiInternalApi
@@ -90,13 +89,25 @@ public open class Voice @MiraiInternalApi constructor(
         /**
          * 将 2.7 新增的 [Audio] 转为旧版本的 [Voice], 以兼容某些情况.
          *
+         * @see Audio.toVoice
          * @since 2.7
          */
+        @Suppress("DeprecatedCallableAddReplaceWith")
+        @Deprecated(
+            "Please consider migrating to Audio",
+            level = DeprecationLevel.WARNING
+        )
         @JvmStatic
         public fun fromAudio(audio: Audio): Voice {
-            // Audio 内部实现继承 Voice 仅提供兼容性, 该兼容不一定会在未来版本一直保持.
-            // 请不要在代码中使用 `audio as Voice` 等不安全转换手段, 而是应该总是使用 `Voice.fromAudio` (Java) 和 `Audio.toVoice` ()
-            return audio as Voice
+            audio.run {
+                return Voice(
+                    filename,
+                    fileMd5,
+                    fileSize,
+                    codec.id,
+                    if (this is OnlineAudio) kotlin.runCatching { urlForDownload }.getOrElse { "" } else ""
+                )
+            }
         }
     }
 
@@ -125,7 +136,16 @@ public open class Voice @MiraiInternalApi constructor(
      *
      * @since 2.7
      */
-    public fun toAudio(): Audio = Mirai.voiceToAudio(this)
+    public fun toAudio(): Audio {
+        val voice = this
+        return OfflineAudio(
+            voice.fileName,
+            voice.md5,
+            voice.fileSize,
+            AudioCodec.fromIdOrNull(voice._codec) ?: AudioCodec.SILK,
+            byteArrayOf()
+        )
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -155,6 +175,10 @@ public open class Voice @MiraiInternalApi constructor(
  *
  * @since 2.7
  */
-@Suppress("DEPRECATION")
+@Suppress("DEPRECATION", "DeprecatedCallableAddReplaceWith")
+@Deprecated(
+    "Please migrate to Audio",
+    level = DeprecationLevel.WARNING
+)
 @JvmSynthetic
 public inline fun Audio.toVoice(): Voice = Voice.fromAudio(this)

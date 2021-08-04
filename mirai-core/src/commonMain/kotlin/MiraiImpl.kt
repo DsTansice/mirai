@@ -129,8 +129,8 @@ internal open class MiraiImpl : IMirai, LowLevelApiAccessor {
                 OnlineAudioImpl.serializer()
             )
             MessageSerializers.registerSerializer(
-                OfflineAudioImplWithPtt::class,
-                OfflineAudioImplWithPtt.Serializer.cast()
+                OfflineAudioImpl::class,
+                OfflineAudioImpl.serializer()
             )
         }
     }
@@ -329,20 +329,6 @@ internal open class MiraiImpl : IMirai, LowLevelApiAccessor {
             invitorId = event.invitorId,
             groupId = event.groupId,
             accept = accept
-        )
-    }
-
-    @Suppress("DEPRECATION")
-    @MiraiInternalApi
-    override fun voiceToAudio(voice: Voice): Audio {
-        if (voice is Audio) return voice
-        return OnlineAudioImpl(
-            voice.fileName,
-            voice.md5,
-            voice.fileSize,
-            AudioCodec.fromIdOrNull(voice._codec) ?: AudioCodec.SILK,
-            voice.url ?: "",
-            0
         )
     }
 

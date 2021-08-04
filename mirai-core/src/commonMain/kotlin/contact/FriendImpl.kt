@@ -9,11 +9,7 @@
 
 @file:OptIn(LowLevelApi::class)
 @file:Suppress(
-    "EXPERIMENTAL_API_USAGE",
-    "DEPRECATION_ERROR",
     "NOTHING_TO_INLINE",
-    "INVISIBLE_MEMBER",
-    "INVISIBLE_REFERENCE"
 )
 
 package net.mamoe.mirai.internal.contact
@@ -28,7 +24,7 @@ import net.mamoe.mirai.event.events.FriendMessagePostSendEvent
 import net.mamoe.mirai.event.events.FriendMessagePreSendEvent
 import net.mamoe.mirai.internal.QQAndroidBot
 import net.mamoe.mirai.internal.contact.info.FriendInfoImpl
-import net.mamoe.mirai.internal.message.OfflineAudioImplWithPtt
+import net.mamoe.mirai.internal.message.OfflineAudioImpl
 import net.mamoe.mirai.internal.network.highway.*
 import net.mamoe.mirai.internal.network.protocol.data.proto.Cmd0x346
 import net.mamoe.mirai.internal.network.protocol.data.proto.ImMsgBody
@@ -79,10 +75,9 @@ internal class FriendImpl(
             "Friend ${this.id} had already been deleted"
         }
         bot.network.run {
-            FriendList.DelFriend.invoke(bot.client, this@FriendImpl)
-                .sendAndExpect<FriendList.DelFriend.Response>().also {
-                    check(it.isSuccess) { "delete friend failed: ${it.resultCode}" }
-                }
+            FriendList.DelFriend.invoke(bot.client, this@FriendImpl).sendAndExpect().also {
+                check(it.isSuccess) { "delete friend failed: ${it.resultCode}" }
+            }
         }
     }
 
@@ -97,12 +92,7 @@ internal class FriendImpl(
     override fun toString(): String = "Friend($id)"
 
     override suspend fun uploadAudio(resource: ExternalResource): OfflineAudio = bot.network.run {
-        val audio = OfflineAudioImplWithPtt(
-            "${resource.md5.toUHexString("")}.amr",
-            resource.md5,
-            resource.size,
-            resource.audioCodec,
-        )
+        var audio: OfflineAudioImpl? = null
         kotlin.runCatching {
             val resp = Highway.uploadResourceBdh(
                 bot = bot,
@@ -117,14 +107,20 @@ internal class FriendImpl(
             if (c346resp.msgApplyUploadRsp == null) {
                 error("Upload failed")
             }
-            audio.originalPtt = ImMsgBody.Ptt(
-                fileType = 4,
-                srcUin = bot.uin,
-                fileUuid = c346resp.msgApplyUploadRsp.uuid,
+            audio = OfflineAudioImpl(
+                filename = "${resource.md5.toUHexString("")}.amr",
                 fileMd5 = resource.md5,
-                fileName = resource.md5 + ".amr".toByteArray(),
-                fileSize = resource.size.toInt(),
-                boolValid = true,
+                fileSize = resource.size,
+                codec = resource.audioCodec,
+                originalPtt = ImMsgBody.Ptt(
+                    fileType = 4,
+                    srcUin = bot.uin,
+                    fileUuid = c346resp.msgApplyUploadRsp.uuid,
+                    fileMd5 = resource.md5,
+                    fileName = resource.md5 + ".amr".toByteArray(),
+                    fileSize = resource.size.toInt(),
+                    boolValid = true,
+                )
             )
         }.recoverCatchingSuppressed {
             when (val resp = PttStore.GroupPttUp(bot.client, bot.id, id, resource).sendAndExpect<Any>()) {
@@ -138,19 +134,25 @@ internal class FriendImpl(
                     ) { ip, port ->
                         Mirai.Http.postPtt(ip, port, resource, resp.uKey, resp.fileKey)
                     }
-                    audio.originalPtt = ImMsgBody.Ptt(
-                        fileType = 4,
-                        srcUin = bot.uin,
-                        fileUuid = resp.fileId.toByteArray(),
+                    audio = OfflineAudioImpl(
+                        filename = "${resource.md5.toUHexString("")}.amr",
                         fileMd5 = resource.md5,
-                        fileName = resource.md5 + ".amr".toByteArray(),
-                        fileSize = resource.size.toInt(),
-                        boolValid = true,
+                        fileSize = resource.size,
+                        codec = resource.audioCodec,
+                        originalPtt = ImMsgBody.Ptt(
+                            fileType = 4,
+                            srcUin = bot.uin,
+                            fileUuid = resp.fileId.toByteArray(),
+                            fileMd5 = resource.md5,
+                            fileName = resource.md5 + ".amr".toByteArray(),
+                            fileSize = resource.size.toInt(),
+                            boolValid = true,
+                        )
                     )
                 }
             }
         }.getOrThrow()
 
-        return audio
+        return audio!!
     }
 }

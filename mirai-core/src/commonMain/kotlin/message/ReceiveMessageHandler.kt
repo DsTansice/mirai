@@ -520,5 +520,6 @@ internal object ReceiveMessageTransformer {
         codec = AudioCodec.fromId(format),
         url = downPara.encodeToString(),
         length = time.toLongUnsigned(),
-    ).also { it.pttInternalInstance = this }
+        originalPtt = this,
+    )
 }

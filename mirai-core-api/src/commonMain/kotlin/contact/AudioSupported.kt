@@ -12,9 +12,9 @@
 package net.mamoe.mirai.contact
 
 import net.mamoe.kjbb.JvmBlockingBridge
+import net.mamoe.mirai.message.data.Audio
 import net.mamoe.mirai.message.data.OfflineAudio
 import net.mamoe.mirai.utils.ExternalResource
-import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsVoice
 import net.mamoe.mirai.utils.NotStableForInheritance
 import net.mamoe.mirai.utils.OverFileSizeMaxException
 
@@ -26,14 +26,20 @@ import net.mamoe.mirai.utils.OverFileSizeMaxException
 @NotStableForInheritance
 public interface AudioSupported : Contact {
     /**
-     * 上传一个语音消息以备发送.
+     * 上传一个语音文件以备发送. [resource] 需要调用方[关闭][ExternalResource.close].
      *
-     * - **请手动关闭 [resource]**
-     * - 请使用 amr 或 silk 格式
+     * 多次调用 [uploadAudio] 使用同一个 [resource] 时, 将会发生多次上传, 且有可能产生不同的 [OfflineAudio] 对象, 因为服务器不会提供有关文件是否已经存在于服务器的信息.
+     *
+     * 返回的 [OfflineAudio] 支持序列化, 可以保存后在将来使用, 而不需要立即[发送][Contact.sendMessage]. 但不建议保存太久, 无法确定服务器保留一个文件的时间.
+     *
+     * 建议使用同一个 [Contact] 进行 [uploadAudio] 和 [sendMessage]. 目标对象不同时的行为是不确定的.
+     *
+     * 要获取更多语音相关的信息, 参阅 [Audio].
+     *
+     * @throws OverFileSizeMaxException 当语音文件过大而被服务器拒绝上传时. (最大大小约为 1 MB)
+     * **注意**: 由于服务器不一定会检查大小, 该异常就不一定会因大小超过 1MB 而抛出.
      *
      * @since 2.7
-     * @see ExternalResource.uploadAsVoice
-     * @throws OverFileSizeMaxException 当语音文件过大而被服务器拒绝上传时. (最大大小约为 1 MB)
      */
     public suspend fun uploadAudio(resource: ExternalResource): OfflineAudio
 }

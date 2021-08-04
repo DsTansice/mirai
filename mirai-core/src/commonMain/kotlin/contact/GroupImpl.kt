@@ -23,7 +23,7 @@ import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.internal.QQAndroidBot
 import net.mamoe.mirai.internal.contact.announcement.AnnouncementsImpl
 import net.mamoe.mirai.internal.contact.info.MemberInfoImpl
-import net.mamoe.mirai.internal.message.OfflineAudioImplWithPtt
+import net.mamoe.mirai.internal.message.OfflineAudioImpl
 import net.mamoe.mirai.internal.message.OfflineGroupImage
 import net.mamoe.mirai.internal.network.components.BdhSession
 import net.mamoe.mirai.internal.network.handler.NetworkHandler
@@ -207,7 +207,7 @@ internal class GroupImpl(
         }
     }
 
-    @Suppress("OverridingDeprecatedMember")
+    @Suppress("OverridingDeprecatedMember", "DEPRECATION")
     override suspend fun uploadVoice(resource: ExternalResource): Voice {
         return bot.network.run {
             uploadAudioResource(resource)
@@ -261,11 +261,12 @@ internal class GroupImpl(
             //     ?.msgTryupPttRsp
             //     ?.singleOrNull()?.fileKey ?: error("Group voice highway transfer succeed but failed to find fileKey")
 
-            OfflineAudioImplWithPtt(
-                "${resource.md5.toUHexString("")}.amr",
-                resource.md5,
-                resource.size,
-                resource.audioCodec,
+            OfflineAudioImpl(
+                filename = "${resource.md5.toUHexString("")}.amr",
+                fileMd5 = resource.md5,
+                fileSize = resource.size,
+                codec = resource.audioCodec,
+                originalPtt = null,
             )
         }
 

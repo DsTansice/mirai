@@ -11,29 +11,54 @@ package net.mamoe.mirai.internal.message
 
 import net.mamoe.mirai.internal.message.OnlineAudioImpl.Companion.DOWNLOAD_URL
 import net.mamoe.mirai.internal.message.OnlineAudioImpl.Companion.refineUrl
+import net.mamoe.mirai.internal.network.protocol.data.proto.ImMsgBody
 import net.mamoe.mirai.internal.test.AbstractTest
-import net.mamoe.mirai.message.data.Audio
 import net.mamoe.mirai.message.data.AudioCodec
 import net.mamoe.mirai.message.data.OfflineAudio
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 internal class AudioTest : AbstractTest() {
 
     @Test
+    fun `test factory`() {
+        assertEquals(
+            OfflineAudio("name", byteArrayOf(), 1, AudioCodec.SILK, byteArrayOf()),
+            OfflineAudio("name", byteArrayOf(), 1, AudioCodec.SILK, byteArrayOf())
+        )
+    }
+
+    @Test
+    fun `invalid extraData is refreshed`() {
+        assertContentEquals(
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK, null).extraData,
+            OfflineAudio("test", byteArrayOf(), 1, AudioCodec.SILK, byteArrayOf(1, 2, 3)).extraData,
+        )
+    }
+
+    @Test
     fun `test equality`() {
         assertEquals(
-            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2),
-            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2)
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, null),
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, null)
         )
         assertEquals(
-            OfflineAudioImplWithPtt("name", byteArrayOf(), 1, AudioCodec.SILK),
-            OfflineAudioImplWithPtt("name", byteArrayOf(), 1, AudioCodec.SILK)
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, null),
+            OnlineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, "url", 2, null)
         )
         assertEquals(
-            OfflineAudio("name", byteArrayOf(), 1, AudioCodec.SILK),
-            OfflineAudio("name", byteArrayOf(), 1, AudioCodec.SILK)
+            OfflineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, originalPtt = null),
+            OfflineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, originalPtt = null)
+        )
+        assertEquals(
+            OfflineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, byteArrayOf()),
+            OfflineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, byteArrayOf())
+        )
+        assertEquals(
+            OfflineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, ImMsgBody.Ptt(srcUin = 2)),
+            OfflineAudioImpl("name", byteArrayOf(), 1, AudioCodec.SILK, ImMsgBody.Ptt(srcUin = 2))
         )
     }
 
@@ -46,10 +71,5 @@ internal class AudioTest : AbstractTest() {
         assertEquals("$DOWNLOAD_URL/test", refineUrl("test"))
         assertEquals("https://custom.com", refineUrl("https://custom.com"))
         assertEquals("http://localhost", refineUrl("http://localhost"))
-    }
-
-    @Test
-    fun `AudioCodec mangling test`() {
-        Audio::class.java.getMethod("getCodec")
     }
 }

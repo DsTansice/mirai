@@ -165,7 +165,6 @@ private val builtInSerializersModule by lazy {
             subclass(SimpleServiceMessage::class, SimpleServiceMessage.serializer())
         }
 
-        hierarchicallyPolymorphic(OfflineAudioImpl.serializer())
         //contextual(SingleMessage::class, SingleMessage.Serializer)
         // polymorphic(SingleMessage::class, SingleMessage.Serializer) {
         //     messageContentSubclasses()

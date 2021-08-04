@@ -3164,6 +3164,7 @@ public abstract interface class net/mamoe/mirai/message/data/Audio : net/mamoe/m
 	public static final field Key Lnet/mamoe/mirai/message/data/Audio$Key;
 	public fun contentToString ()Ljava/lang/String;
 	public abstract fun getCodec ()Lnet/mamoe/mirai/message/data/AudioCodec;
+	public abstract fun getExtraData ()[B
 	public abstract fun getFileMd5 ()[B
 	public abstract fun getFileSize ()J
 	public abstract fun getFilename ()Ljava/lang/String;
@@ -3187,28 +3188,11 @@ public final class net/mamoe/mirai/message/data/AudioCodec : java/lang/Enum {
 	public static fun values ()[Lnet/mamoe/mirai/message/data/AudioCodec;
 }
 
-public final class net/mamoe/mirai/message/data/AudioCodec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lnet/mamoe/mirai/message/data/AudioCodec$$serializer;
-	public static final synthetic field descriptor Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lnet/mamoe/mirai/message/data/AudioCodec;
-	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lnet/mamoe/mirai/message/data/AudioCodec;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
 public final class net/mamoe/mirai/message/data/AudioCodec$Companion {
 	public final fun fromFormatName (Ljava/lang/String;)Lnet/mamoe/mirai/message/data/AudioCodec;
 	public final fun fromFormatNameOrNull (Ljava/lang/String;)Lnet/mamoe/mirai/message/data/AudioCodec;
 	public final fun fromId (I)Lnet/mamoe/mirai/message/data/AudioCodec;
 	public final fun fromIdOrNull (I)Lnet/mamoe/mirai/message/data/AudioCodec;
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class net/mamoe/mirai/message/data/AudioKt {
-	public static final fun OfflineAudio (Ljava/lang/String;[BJLnet/mamoe/mirai/message/data/AudioCodec;)Lnet/mamoe/mirai/message/data/OfflineAudio;
 }
 
 public abstract interface class net/mamoe/mirai/message/data/ConstrainSingle : net/mamoe/mirai/message/data/SingleMessage {
@@ -4552,6 +4536,8 @@ public final class net/mamoe/mirai/message/data/MessageUtils {
 	public static final synthetic fun At (Lnet/mamoe/mirai/contact/UserOrBot;)Lnet/mamoe/mirai/message/data/At;
 	public static final synthetic fun FileMessage (Ljava/lang/String;ILjava/lang/String;J)Lnet/mamoe/mirai/message/data/FileMessage;
 	public static final synthetic fun Image (Ljava/lang/String;)Lnet/mamoe/mirai/message/data/Image;
+	public static final synthetic fun OfflineAudio (Ljava/lang/String;[BJLnet/mamoe/mirai/message/data/AudioCodec;[B)Lnet/mamoe/mirai/message/data/OfflineAudio;
+	public static final synthetic fun OfflineAudio (Lnet/mamoe/mirai/message/data/OnlineAudio;)Lnet/mamoe/mirai/message/data/OfflineAudio;
 	public static final synthetic fun UnsupportedMessage ([B)Lnet/mamoe/mirai/message/data/UnsupportedMessage;
 	public static final synthetic fun at (Lnet/mamoe/mirai/contact/Member;)Lnet/mamoe/mirai/message/data/At;
 	public static final fun buildMessageChain (ILkotlin/jvm/functions/Function1;)Lnet/mamoe/mirai/message/data/MessageChain;
@@ -4661,12 +4647,21 @@ public final class net/mamoe/mirai/message/data/MusicShare$Key : net/mamoe/mirai
 public abstract interface class net/mamoe/mirai/message/data/OfflineAudio : net/mamoe/mirai/message/data/Audio {
 	public static final field Key Lnet/mamoe/mirai/message/data/OfflineAudio$Key;
 	public static final field SERIAL_NAME Ljava/lang/String;
-	public static fun create (Ljava/lang/String;[BJLnet/mamoe/mirai/message/data/AudioCodec;)Lnet/mamoe/mirai/message/data/OfflineAudio;
+}
+
+public abstract interface class net/mamoe/mirai/message/data/OfflineAudio$Factory {
+	public static final field INSTANCE Lnet/mamoe/mirai/message/data/OfflineAudio$Factory$INSTANCE;
+	public abstract fun create (Ljava/lang/String;[BJLnet/mamoe/mirai/message/data/AudioCodec;[B)Lnet/mamoe/mirai/message/data/OfflineAudio;
+	public fun from (Lnet/mamoe/mirai/message/data/OnlineAudio;)Lnet/mamoe/mirai/message/data/OfflineAudio;
+}
+
+public final class net/mamoe/mirai/message/data/OfflineAudio$Factory$INSTANCE : net/mamoe/mirai/message/data/OfflineAudio$Factory {
+	public fun create (Ljava/lang/String;[BJLnet/mamoe/mirai/message/data/AudioCodec;[B)Lnet/mamoe/mirai/message/data/OfflineAudio;
+	public fun from (Lnet/mamoe/mirai/message/data/OnlineAudio;)Lnet/mamoe/mirai/message/data/OfflineAudio;
 }
 
 public final class net/mamoe/mirai/message/data/OfflineAudio$Key : net/mamoe/mirai/message/data/AbstractPolymorphicMessageKey {
 	public static final field SERIAL_NAME Ljava/lang/String;
-	public final fun create (Ljava/lang/String;[BJLnet/mamoe/mirai/message/data/AudioCodec;)Lnet/mamoe/mirai/message/data/OfflineAudio;
 }
 
 public abstract class net/mamoe/mirai/message/data/OfflineMessageSource : net/mamoe/mirai/message/data/MessageSource {
